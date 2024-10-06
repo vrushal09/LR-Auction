@@ -5,12 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auction</title>
     <link rel="stylesheet" href="style.css">
-
+    
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Public Auction</h2>
+        <table id="auction-list">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Base Price</th>
+                    <th>Highest Bid</th>
+                    <th>Bidder</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Players will be populated here -->
+            </tbody>
+        </table>
+    </div>
+
     <script>
-        // Firebase configuration (use your project's config)
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyB1sIeuehuTt6R9RNWlk9-j_vKuPzQKPL8",
             authDomain: "lr-auction.firebaseapp.com",
@@ -25,25 +47,80 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+
+        // Function to fetch and display auction items
+        function fetchPlayers() {
+            const playersList = document.querySelector("#auction-list tbody");
+            database.ref("players").on("value", function(snapshot) {
+                console.log("Snapshot: ", snapshot.val());
+                playersList.innerHTML = ''; // Clear previous players
+                snapshot.forEach(function(childSnapshot) {
+                    const player = childSnapshot.val();
+                    console.log("Player: ", player);
+                    const playerRow = document.createElement("tr");
+
+                    playerRow.innerHTML = `
+                        <td>${player.name}</td>
+                        <td>${player.role}</td>
+                        <td>${player.basePrice}</td>
+                        <td>${player.highestBid || 'No bids yet'}</td>
+                        <td>${player.highestBidder || 'N/A'}</td>
+                        <td>
+                            <button onclick="adjustBid('${childSnapshot.key}', 10)">Bid Up</button>
+                            <button onclick="adjustBid('${childSnapshot.key}', -10)">Bid Down</button>
+                        </td>
+                    `;
+                    
+                    playersList.appendChild(playerRow);
+                });
+            }, function(error) {
+                console.error("Error fetching players: ", error);
+            });
+        }
+
+        // Call this function on window load
+        window.onload = function() {
+            fetchPlayers();
+        };
+
+        // Function to adjust bid
+        function adjustBid(itemId, increment) {
+            const itemRef = database.ref(`players/${itemId}`);
+            itemRef.once("value").then(function(snapshot) {
+                const currentBid = snapshot.val().highestBid || 0;
+                const newBid = currentBid + increment;
+
+                if (newBid < 0) {
+                    alert("Bid cannot be negative.");
+                    return;
+                }
+
+                // Get the current logged-in user
+                const user = firebase.auth().currentUser;
+
+                // Ensure the user is logged in before placing a bid
+                if (user) {
+                    const newBidder = user.email.split('@')[0]; // Extract username from email
+
+                    // Update the highest bid and bidder in the database
+                    itemRef.update({
+                        highestBid: newBid,
+                        highestBidder: newBidder
+                    });
+                } else {
+                    alert("You must be logged in to place a bid.");
+                }
+            });
+        }
+
+        // Firebase Authentication listener
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+                console.log("User is logged in: ", user.email);
+            } else {
+                console.log("No user is logged in.");
+            }
+        });
     </script>
-</head>
-<body>
-    <div class="container">
-        <h2>Public Auction</h2>
-        <table id="auction-list">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Role</th>
-                    <th>Base Price</th>
-                    <th>Highest Bid</th>
-                    <th>Bidder</th>
-                    <th>Place Bid</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-    <script src="script.js"></script>
 </body>
 </html>
