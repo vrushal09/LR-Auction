@@ -7,26 +7,92 @@
     <link rel="stylesheet" href="style.css">
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <script>
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-        apiKey: "AIzaSyB1sIeuehuTt6R9RNWlk9-j_vKuPzQKPL8",
-        authDomain: "lr-auction.firebaseapp.com",
-        databaseURL: "https://lr-auction-default-rtdb.firebaseio.com",
-        projectId: "lr-auction",
-        storageBucket: "lr-auction.appspot.com",
-        messagingSenderId: "436949486582",
-        appId: "1:436949486582:web:0e061f26f3ca1ec7c215d7",
-        measurementId: "G-KCBN7HE5T3"
-    };
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1sIeuehuTt6R9RNWlk9-j_vKuPzQKPL8",
+            authDomain: "lr-auction.firebaseapp.com",
+            databaseURL: "https://lr-auction-default-rtdb.firebaseio.com",
+            projectId: "lr-auction",
+            storageBucket: "lr-auction.appspot.com",
+            messagingSenderId: "436949486582",
+            appId: "1:436949486582:web:0e061f26f3ca1ec7c215d7",
+            measurementId: "G-KCBN7HE5T3"
+        };
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // Function to add player to Firebase Realtime Database
+        function addPlayerToFirebase(player) {
+            const newPlayerKey = database.ref().child('players').push().key;
+            database.ref('players/' + newPlayerKey).set(player);
+        }
+
+        // Function to render player list in the table
+        function renderPlayerList(player, playerKey) {
+            const playerList = document.querySelector("#player-list tbody");
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${player.name}</td>
+                <td>${player.role}</td>
+                <td>${player.basePrice}</td>
+                <td><button onclick="deletePlayer('${playerKey}')">Delete</button></td>
+            `;
+            
+            playerList.appendChild(row);
+        }
+
+        // Fetch players from Firebase and display in the admin page
+        function fetchPlayers() {
+            database.ref("players").on("value", function(snapshot) {
+                const playerList = document.querySelector("#player-list tbody");
+                playerList.innerHTML = ''; // Clear previous list
+
+                snapshot.forEach(function(childSnapshot) {
+                    const player = childSnapshot.val();
+                    const playerKey = childSnapshot.key;
+                    renderPlayerList(player, playerKey);
+                });
+            });
+        }
+
+        // Delete player from Firebase
+        function deletePlayer(playerKey) {
+            database.ref("players/" + playerKey).remove();
+            fetchPlayers(); // Refresh list after delete
+        }
+
+        // Function to handle adding a player
+        function handleAddPlayer(event) {
+            event.preventDefault(); // Prevent form submission
+
+            const playerName = document.getElementById("player-name").value;
+            const playerRole = document.getElementById("player-role").value;
+            const basePrice = document.getElementById("base-price").value;
+
+            const player = {
+                name: playerName,
+                role: playerRole,
+                basePrice: basePrice
+            };
+
+            // Add player to Firebase
+            addPlayerToFirebase(player);
+            fetchPlayers(); // Refresh list
+        }
+
+        // Fetch players when page loads
+        window.onload = function() {
+            fetchPlayers();
+        };
     </script>
-
 </head>
 <body>
     <div class="container" id="login-container">
@@ -46,7 +112,7 @@
 
     <div id="admin-dashboard" class="hidden">
         <h2>Admin Dashboard</h2>
-        <form id="add-player-form">
+        <form id="add-player-form" onsubmit="handleAddPlayer(event)">
             <input type="text" id="player-name" placeholder="Player Name" required>
             <select id="player-role">
                 <option value="Batsman">Batsman</option>
@@ -54,7 +120,7 @@
                 <option value="All-Rounder">All-Rounder</option>
             </select>
             <input type="number" id="base-price" placeholder="Base Price" required>
-            <button type="submit">Add Player</button>
+            <button type="submit" id="addplayer">Add Player</button>
         </form>
         <h3>Player List</h3>
         <table id="player-list">
@@ -69,7 +135,7 @@
             <tbody></tbody>
         </table>
         <button onclick="logout()">Logout</button>
-        <a href="bid.html"><button>Show Bid</button></a>
+        <a href="index.html"><button>Show Bid</button></a>
     </div>
 
     <script>
@@ -84,25 +150,29 @@
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
-            // Dummy login check (replace with Firebase auth if necessary)
-            if (username === "admin" && password === "admin123") {
-                // Hide login form and show dashboard
+            // Check credentials against Firebase authentication
+            auth.signInWithEmailAndPassword(username, password).then((userCredential) => {
+                // Successful login
                 loginContainer.classList.add("hidden");
                 dashboard.classList.remove("hidden");
-            } else {
-                errorMessage.textContent = "Invalid username or password.";
-            }
+                fetchPlayers(); // Fetch players after login
+            }).catch((error) => {
+                errorMessage.textContent = error.message;
+            });
         });
 
         // Go to player list button logic
         document.getElementById("go-to-players").addEventListener("click", function() {
-            window.location.href = "players.html";  // Assuming players.html exists
+            window.location.href = "player.html";  // Assuming player.html exists
         });
 
         // Logout function
         function logout() {
-            loginContainer.classList.remove("hidden");
-            dashboard.classList.add("hidden");
+            auth.signOut().then(() => {
+                loginContainer.classList.remove("hidden");
+                dashboard.classList.add("hidden");
+                errorMessage.textContent = ""; // Clear any error messages
+            });
         }
     </script>
 
