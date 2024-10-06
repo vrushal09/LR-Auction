@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login</title>
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1sIeuehuTt6R9RNWlk9-j_vKuPzQKPL8",
+        authDomain: "lr-auction.firebaseapp.com",
+        databaseURL: "https://lr-auction-default-rtdb.firebaseio.com",
+        projectId: "lr-auction",
+        storageBucket: "lr-auction.appspot.com",
+        messagingSenderId: "436949486582",
+        appId: "1:436949486582:web:0e061f26f3ca1ec7c215d7",
+        measurementId: "G-KCBN7HE5T3"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    </script>
+
+</head>
+<body>
+    <div class="container">
+        <h2>Admin Login</h2>
+        <form id="admin-login-form">
+            <label for="username">Username</label>
+            <input type="text" id="username" required>
+            <label for="password">Password</label>
+            <input type="password" id="password" required>
+            <button type="submit">Login</button>
+            <p id="error-message" class="error"></p>
+        </form>
+        
+        <h3>Or</h3>
+        <button id="go-to-players">Go to Player List</button>
+    </div>
+
+    <div id="admin-dashboard" class="hidden">
+        <h2>Admin Dashboard</h2>
+        <form id="add-player-form">
+            <input type="text" id="player-name" placeholder="Player Name" required>
+            <select id="player-role">
+                <option value="Batsman">Batsman</option>
+                <option value="Bowler">Bowler</option>
+                <option value="All-Rounder">All-Rounder</option>
+            </select>
+            <input type="number" id="base-price" placeholder="Base Price" required>
+            <button type="submit">Add Player</button>
+        </form>
+        <h3>Player List</h3>
+        <table id="player-list">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Base Price</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <button onclick="logout()">Logout</button>
+        <a href="bid.html"><button>showbid</button></a>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
