@@ -1,21 +1,6 @@
-// const firebaseConfig = {
-//     apiKey: "AIzaSyB1sIeuehuTt6R9RNWlk9-j_vKuPzQKPL8",
-//     authDomain: "lr-auction.firebaseapp.com",
-//     databaseURL: "https://lr-auction-default-rtdb.firebaseio.com",
-//     projectId: "lr-auction",
-//     storageBucket: "lr-auction.appspot.com",
-//     messagingSenderId: "436949486582",
-//     appId: "1:436949486582:web:0e061f26f3ca1ec7c215d7",
-//     measurementId: "G-KCBN7HE5T3"
-// };
-
-// Initialize Firebase
-// firebase.initializeApp(firebaseConfig);
-// const database = firebase.database();
-
 // Hardcoded Admin Login
 const adminUsername = "admin";
-const adminPassword = "admin";
+const adminPassword = "admin123";
 
 // Admin Login Handler
 const adminLoginForm = document.getElementById("admin-login-form");
@@ -43,11 +28,11 @@ if (adminLoginForm) {
     });
 }
 
-// Load players from Firebase or sample data
+// Load players from Firebase
 const playersRef = database.ref('players');
 
 playersRef.on('value', (snapshot) => {
-    const players = snapshot.val() || [];
+    const players = snapshot.val() || {};
     renderAdminPlayers(players);
 });
 
@@ -173,51 +158,18 @@ function renderPlayerListPage(players) {
                 <td>${player.name}</td>
                 <td>${player.role}</td>
                 <td>${player.basePrice}</td>
-                <td id="highestBid-${key}">${player.highestBid}</td>
-                <td id="highestBidder-${key}">${player.highestBidder}</td>
-                <td>
-                    <button class="bid-btn" onclick="updateBid('${key}', -50)">-50</button>
-                    <button class="bid-btn" onclick="updateBid('${key}', 50)">+50</button>
-                </td>
+                <td>${player.highestBid}</td>
+                <td>${player.highestBidder}</td>
             </tr>
         `;
         playerListPageTable.innerHTML += row;
     });
 }
 
-// Render player list on player.html page load
+// Load players for player.html
 if (playerListPageTable) {
     playersRef.on('value', (snapshot) => {
         const players = snapshot.val() || {};
         renderPlayerListPage(players);
-    });
-}
-
-// Bids Overview on bid.html
-const bidListTable = document.querySelector("#bid-list tbody");
-
-function renderBidList(players) {
-    if (bidListTable) {
-        bidListTable.innerHTML = ""; // Clear existing content
-        Object.keys(players).forEach((key) => {
-            const player = players[key];
-            const row = `
-                <tr>
-                    <td>${player.name}</td>
-                    <td>${player.role}</td>
-                    <td>${player.highestBid > 0 ? player.highestBid : "No bids yet"}</td>
-                    <td>${player.highestBidder || "None"}</td>
-                </tr>
-            `;
-            bidListTable.innerHTML += row;
-        });
-    }
-}
-
-// Render bid list on bid.html page load
-if (bidListTable) {
-    playersRef.on('value', (snapshot) => {
-        const players = snapshot.val() || {};
-        renderBidList(players);
     });
 }
