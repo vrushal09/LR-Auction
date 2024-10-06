@@ -29,7 +29,7 @@
 
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="login-container">
         <h2>Admin Login</h2>
         <form id="admin-login-form">
             <label for="username">Username</label>
@@ -69,9 +69,42 @@
             <tbody></tbody>
         </table>
         <button onclick="logout()">Logout</button>
-        <a href="bid.html"><button>showbid</button></a>
+        <a href="bid.html"><button>Show Bid</button></a>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        const loginForm = document.getElementById("admin-login-form");
+        const errorMessage = document.getElementById("error-message");
+        const dashboard = document.getElementById("admin-dashboard");
+        const loginContainer = document.getElementById("login-container");
+
+        // Admin login logic
+        loginForm.addEventListener("submit", function(event) {
+            event.preventDefault();
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            // Dummy login check (replace with Firebase auth if necessary)
+            if (username === "admin" && password === "admin123") {
+                // Hide login form and show dashboard
+                loginContainer.classList.add("hidden");
+                dashboard.classList.remove("hidden");
+            } else {
+                errorMessage.textContent = "Invalid username or password.";
+            }
+        });
+
+        // Go to player list button logic
+        document.getElementById("go-to-players").addEventListener("click", function() {
+            window.location.href = "players.html";  // Assuming players.html exists
+        });
+
+        // Logout function
+        function logout() {
+            loginContainer.classList.remove("hidden");
+            dashboard.classList.add("hidden");
+        }
+    </script>
+
 </body>
 </html>
