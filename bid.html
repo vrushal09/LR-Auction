@@ -25,6 +25,32 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+
+        // Function to fetch and display bids
+        function fetchBids() {
+            const bidList = document.querySelector("#bid-list tbody");
+            database.ref("bids").on("value", function(snapshot) {
+                bidList.innerHTML = ''; // Clear previous bids
+                snapshot.forEach(function(childSnapshot) {
+                    const bid = childSnapshot.val();
+                    const bidRow = document.createElement("tr");
+
+                    bidRow.innerHTML = `
+                        <td>${bid.playerName}</td>
+                        <td>${bid.role}</td>
+                        <td>${bid.amount}</td>
+                        <td>${bid.bidderName}</td>
+                    `;
+                    
+                    bidList.appendChild(bidRow);
+                });
+            });
+        }
+
+        // Fetch bids when the page loads
+        window.onload = function() {
+            fetchBids();
+        };
     </script>
 </head>
 <body>
