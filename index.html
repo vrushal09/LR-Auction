@@ -142,8 +142,8 @@
                         <td>${player.highestBid || 'No bids yet'}</td>
                         <td>${player.highestBidder || 'N/A'}</td>
                         <td>
-                            <button onclick="adjustBid('${childSnapshot.key}', 10)">Bid Up</button>
-                            <button onclick="adjustBid('${childSnapshot.key}', -10)">Bid Down</button>
+                            <button onclick="adjustBid('${childSnapshot.key}', 50)">Bid Up</button>
+                            <button onclick="adjustBid('${childSnapshot.key}', -50)">Bid Down</button>
                             ${isAdmin ? `
                                 <button onclick="sellPlayer('${childSnapshot.key}', '${player.name}', '${player.highestBidder || 'N/A'}')">Sell Player</button>
                                 <button onclick="unsoldPlayer('${childSnapshot.key}', '${player.name}')">Unsold</button>
