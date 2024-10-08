@@ -4,12 +4,88 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auction</title>
-    <link rel="stylesheet" href="style.css">
-    
+
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <!-- Inline CSS for styling -->
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #ff7e4d; /* Matching admin page background */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333; /* Dark text for better readability */
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background-color: #ffffff; /* White container for contrast */
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #ff7e4d; /* Orange color for heading */
+            margin-bottom: 20px;
+            font-size: 28px;
+            letter-spacing: 1px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px; /* Spacing above the table */
+        }
+
+        table thead {
+            background-color: #ff7e4d; /* Matching admin page header color */
+            color: #ffffff; /* White text for contrast */
+        }
+
+        table th, table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd; /* Light border for rows */
+        }
+
+        table tbody tr:hover {
+            background-color: #ffe1d4; /* Light hover effect */
+        }
+
+        button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            background-color: #ff7e4d; /* Orange button color */
+            color: #ffffff; /* White text for buttons */
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #ff5a30; /* Darker orange on hover */
+        }
+
+        td:last-child {
+            text-align: center;
+        }
+
+        .message {
+            color: #ff5a30; /* Color for messages */
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -48,15 +124,15 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
+        let isAdmin = false; // Variable to check if the user is admin
+
         // Function to fetch and display auction items
         function fetchPlayers() {
             const playersList = document.querySelector("#auction-list tbody");
             database.ref("players").on("value", function(snapshot) {
-                console.log("Snapshot: ", snapshot.val());
                 playersList.innerHTML = ''; // Clear previous players
                 snapshot.forEach(function(childSnapshot) {
                     const player = childSnapshot.val();
-                    console.log("Player: ", player);
                     const playerRow = document.createElement("tr");
 
                     playerRow.innerHTML = `
@@ -68,6 +144,11 @@
                         <td>
                             <button onclick="adjustBid('${childSnapshot.key}', 10)">Bid Up</button>
                             <button onclick="adjustBid('${childSnapshot.key}', -10)">Bid Down</button>
+                            ${isAdmin ? `
+                                <button onclick="sellPlayer('${childSnapshot.key}', '${player.name}', '${player.highestBidder || 'N/A'}')">Sell Player</button>
+                                <button onclick="unsoldPlayer('${childSnapshot.key}', '${player.name}')">Unsold</button>
+                            ` : ''}
+                            <div class="message" id="message-${childSnapshot.key}"></div>
                         </td>
                     `;
                     
@@ -95,10 +176,8 @@
                     return;
                 }
 
-                // Get the current logged-in user
                 const user = firebase.auth().currentUser;
 
-                // Ensure the user is logged in before placing a bid
                 if (user) {
                     const newBidder = user.email.split('@')[0]; // Extract username from email
 
@@ -113,13 +192,37 @@
             });
         }
 
+        // Function to sell player
+        function sellPlayer(itemId, playerName, currentBidder) {
+            const messageElement = document.getElementById(`message-${itemId}`);
+            const message = `${playerName} sold to ${currentBidder}`;
+            const itemRef = database.ref(`players/${itemId}`);
+
+            itemRef.update({ sold: true });
+            messageElement.innerText = message;
+            messageElement.style.color = 'green'; // Success message
+        }
+
+        // Function to mark player as unsold
+        function unsoldPlayer(itemId, playerName) {
+            const messageElement = document.getElementById(`message-${itemId}`);
+            const message = `${playerName} unsold`;
+            const itemRef = database.ref(`players/${itemId}`);
+
+            itemRef.update({ sold: false });
+            messageElement.innerText = message;
+            messageElement.style.color = 'orange'; // Neutral message
+        }
+
         // Firebase Authentication listener
         firebase.auth().onAuthStateChanged(function(user) {
             if (user) {
                 console.log("User is logged in: ", user.email);
+                isAdmin = (user.email === "admin@example.com"); // Replace with your admin email
             } else {
                 console.log("No user is logged in.");
             }
+            fetchPlayers(); // Fetch players again to show admin buttons if applicable
         });
     </script>
 </body>
